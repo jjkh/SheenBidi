@@ -1,0 +1,19 @@
+.{
+    .name = .SheenBidi,
+    .version = "2.9.0",
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{
+        .SheenBidi = .{
+            .url = "git+https://github.com/Tehreer/SheenBidi#v2.9.0",
+            .hash = "N-V-__8AAHe8LwF6n4S3jDUlzJLIka4vXuAcDZnCnNpaR1-l",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE",
+        "LICENSE-SHEENBIDI",
+        "README.md",
+    },
+    .fingerprint = 0x4a89f1d273989bb4,
+}
