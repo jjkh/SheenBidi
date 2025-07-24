@@ -15,6 +15,7 @@ Mostly untested:
 const sheenbidi_dep = b.dependency("SheenBidi", .{
     .target = target,
     .optimize = optimize,
+    .linkage = .dynamic // optional, defaults to .static
 });
 exe.linkLibrary(sheenbidi_dep.artifact("SheenBidi"));
 ```

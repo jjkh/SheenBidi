@@ -1,5 +1,8 @@
 const std = @import("std");
 
+// const version = std.SemanticVersion.parse(@import("build.zig.zon").version) catch unreachable;
+const version = std.SemanticVersion{ .major = 2, .minor = 9, .patch = 0 };
+
 pub fn build(b: *std.Build) void {
     const upstream = b.dependency("SheenBidi", .{});
     const target = b.standardTargetOptions(.{});
@@ -15,17 +18,18 @@ pub fn build(b: *std.Build) void {
         "build-generator",
         "Build the Unicode data generator tool (default: false)",
     ) orelse false;
+
     const unity_build = b.option(
         bool,
         "unity",
         "Build with a single unity source file (default: true)",
     ) orelse !build_tests;
-    const dynamic_lib = b.option(
-        bool,
-        "dynamic-lib",
-        "Build SheenBidi as a dynamic library (default: false)",
-    ) orelse false;
-    const dll_mode = dynamic_lib and target.result.os.tag == .windows;
+    const linkage = b.option(
+        std.builtin.LinkMode,
+        "linkage",
+        "Whether to build SheenBidi as a static or dynamic library (default: static)",
+    ) orelse .static;
+    const dll_mode = linkage == .dynamic and target.result.os.tag == .windows;
 
     if (build_tests and unity_build) {
         std.log.err("cannot build tests with unity build enabled", .{});
@@ -40,11 +44,13 @@ pub fn build(b: *std.Build) void {
 
     const lib = b.addLibrary(.{
         .name = "SheenBidi",
-        .linkage = if (dynamic_lib) .dynamic else .static,
+        .linkage = linkage,
         .root_module = b.createModule(.{
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         }),
+        .version = version,
     });
 
     const root_dir = upstream.path("");
@@ -53,7 +59,6 @@ pub fn build(b: *std.Build) void {
     const tools_dir = upstream.path("Tools");
     const tests_dir = upstream.path("Tests");
 
-    lib.linkLibC();
     const c_flags = &.{
         if (unity_build) "-DSB_CONFIG_UNITY" else "",
         if (dll_mode) "-DSB_CONFIG_DLL_EXPORT" else "",
@@ -77,9 +82,9 @@ pub fn build(b: *std.Build) void {
         .root_module = b.createModule(.{
             .target = target,
             .optimize = optimize,
+            .link_libcpp = true,
         }),
     });
-    parser_lib.linkLibCpp();
     parser_lib.addCSourceFiles(.{
         .root = parser_root,
         .files = parser_sources,
